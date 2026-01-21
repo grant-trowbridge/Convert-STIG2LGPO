@@ -76,6 +76,36 @@ function Get-LGPOFileEntry { # Finish Regex to determine Configuration, Registry
     elseif($CheckContent -match 'Value:\s*0x([0-9a-fA-F]+)') { # Hex only
         $value = [Convert]::ToInt32($Matches[1], 16)
     }
+    elseif($CheckContent -match 'Value:\s*(\d+)' -and $type -eq 'DWORD') { # Decimal value
+        $value = $Matches[1]
+    }
+    elseif($CheckContent -match 'Value:\s*"(.+?)"') { # Quoted string
+        $value = $Matches[1]
+    }
+    elseif($CheckContent -match 'Value:\s*(.+?)(?:\r|\n)' -and $type -in @('SZ', 'EXSZ')) { # Unquoted string
+        $value = $Matches[1].Trim()
+    }
+
+    if($CheckContent -match 'does not exist|is not configured') {
+        $action = 'DELETE'
+    }
+    elseif($type -and $null -ne $data) {
+        $action = "${type}:${value}"
+    }
+    
+    if (-not ($configuration -and $registryKey -and $valueName)) {
+        return $null
+    }
+    
+    # Return PSCustomObject
+    return [PSCustomObject]@{
+        GroupId       = $GroupId
+        RuleId        = $RuleId
+        Configuration = $configuration
+        RegistryKey   = $registryKey
+        ValueName     = $valueName
+        Action        = $action
+    }
 }
 
 if(-not $LGPOPath) {
