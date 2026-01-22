@@ -13,7 +13,6 @@ param(
         Position=1,
         HelpMessage="Path to the destination LGPO text file"
     )]
-    [ValidateNotNullOrEmpty()]
     [string]$LGPOPath
 )
 
@@ -21,14 +20,15 @@ function Get-LGPOFileEntry { # Finish Regex to determine Configuration, Registry
     param (
         [string]$CheckContent,
         [string]$GroupId,
-        [string]$RuleId
+        [string]$RuleId,
+        [String]$Title
     )
     $configuration = $null
     
-    if($CheckContent -match 'HKLM\\|HKEY_LOCAL_MACHINE\\') {
+    if($CheckContent -match 'HKLM\\|HKLM|HKEY_LOCAL_MACHINE\\|HKEY_LOCAL_MACHINE') {
         $configuration = 'Computer'
     }
-    elseif($CheckContent -match 'HKCU\\|HKEY_CURRENT_USER\\') {
+    elseif($CheckContent -match 'HKCU\\|HKCU|HKEY_CURRENT_USER\\|HKEY_CURRENT_USER') {
         $configuration = 'User'
     }
     else {
@@ -37,10 +37,10 @@ function Get-LGPOFileEntry { # Finish Regex to determine Configuration, Registry
 
     # Extract registry key
     $registryKey = $null
-    if($CheckContent -match 'HK(?:LM|EY_LOCAL_MACHINE)\\(.+?)(?:\r|\n)') {
+    if($CheckContent -match 'HK(?:LM|EY_LOCAL_MACHINE)\\(.+?)(?:\r|\n)|Registry Path:\s*\\(.+?)(?:\r|\n)') { # Separate OR regex statement into more elseif statements for easier access through $Matches!!!
         $registryKey = $Matches[1].Trim()
     }
-    elseif($CheckContent -match 'HK(?:CU|EY_CURRENT_USER)\\(.+?)(?:\r|\n)') {
+    elseif($CheckContent -match 'HK(?:CU|EY_CURRENT_USER)\\(.+?)(?:\r|\n)|Registry Path:\s*\\(.+?)(?:\r|\n)') {
         $registryKey = $Matches[1].Trim()
     }
 
@@ -99,6 +99,7 @@ function Get-LGPOFileEntry { # Finish Regex to determine Configuration, Registry
     
     # Return PSCustomObject
     return [PSCustomObject]@{
+        Title         = $Title
         GroupId       = $GroupId
         RuleId        = $RuleId
         Configuration = $configuration
@@ -107,11 +108,6 @@ function Get-LGPOFileEntry { # Finish Regex to determine Configuration, Registry
         Action        = $action
     }
 }
-
-if(-not $LGPOPath) {
-    $LGPOPath = "$PSScriptRoot\STIG2LGPOFile_$(Get-Date -Format 'yyyy-MM-ddTHH-mm-ss-fff')"
-}
-# For time stamping Get-Date -Format 'yyyy-MM-dd_HH-mm-ss-fff' (Use colons for verbose output?)
 
 $EXPANDPATH = ($STIGPath | Split-Path -Parent) + '\' + (Get-ChildItem -Path $STIGPath -ErrorAction Stop).BaseName
 
@@ -148,9 +144,11 @@ $xmlData.Load($xmlFile.FullName)
 $nsManager = New-Object System.Xml.XmlNamespaceManager($xmlData.NameTable)
 $nsManager.AddNamespace("xccdf", $xmlData.DocumentElement.NamespaceURI)
 
-Write-Verbose "Found $($XmlData.SelectNodes('//xccdf:Group/@id', $nsManager).Count) Group IDs"
+Write-Verbose "Found $($XmlData.SelectNodes('//xccdf:Group/@id', $nsManager).Count) Vuln IDs"
 
 # Add logic to identify STIG being processed <Benchmark><title>Microsoft Windows 11 Security Technical Implementation Guide</title><Benchmark>
+
+$benchmark = $XmlData.SelectNodes('//xccdf:Benchmark',$nsManager)
 
 $groups = $xmlData.SelectNodes('//xccdf:Group', $nsManager)
 
@@ -159,7 +157,63 @@ $groups = $xmlData.SelectNodes('//xccdf:Group', $nsManager)
 $lgpoEntries = @()
 
 foreach($group in $groups) {
-    Get-LGPOFileEntry -CheckContent $group.Rule.check.{check-content} -GroupId $group.Group
+    if($group.id -eq 'V-253284'){
+        Write-Host "[!] Current VulnID is $($group.id)!" -ForegroundColor Green
+    }
+
+    $cCheckContent = $group.Rule.check.{check-content}
+    $cGroupId = $group.id
+    $cRuleId = $group.Rule.id
+    $cRuleTitle = $group.Rule.title
+
+    $lgpoEntry = Get-LGPOFileEntry -CheckContent $cCheckContent -GroupId $cGroupId -RuleId $cRuleId -Title $cRuleTitle
+
+    if($lgpoEntry) {
+        $lgpoEntries += $lgpoEntry
+        Write-Verbose "Located LGPO entry:"
+        Write-Verbose "     Title: $($lgpoEntry.Title)"
+        Write-Verbose "     Vuln ID: $($lgpoEntry.GroupId)"
+        Write-Verbose "     Rule ID: $($lgpoEntry.RuleId)"
+        Write-Verbose "     Configuration: $($lgpoEntry.Configuration)"
+        Write-Verbose "     Registry Key: $($lgpoEntry.RegistryKey)"
+        Write-Verbose "     Value Name: $($lgpoEntry.ValueName)"
+        Write-Verbose "     Action: $($lgpoEntry.Action)"
+    }
+}
+
+$lgpoContent = $null
+if($lgpoEntries) {
+    for($i = 0; $i -lt $lgpoEntries.Length; $i++) {
+        if($i -gt 0){
+            $lgpoContent += "`r`n`r`n; Title: $($lgpoEntries[$i].Title)`r`n; Vuln ID: $($lgpoEntries[$i].GroupId)`r`n; Rule ID: $($lgpoEntries[$i].RuleId)`r`n$($lgpoEntries[$i].Configuration)`r`n$($lgpoEntries[$i].RegistryKey)`r`n$($lgpoEntries[$i].ValueName)`r`n$($lgpoEntries[$i].Action)"
+        }
+        else { # Add Benchmark logic to list STIG title, version & release number at the beginning 
+            $lgpoContent = "; $(($benchmark.title).Trim()) Version $(($benchmark.version).Trim()) $($benchmark.{plain-text} | Where-Object {$PSItem.id -eq 'release-info'} | Select-Object -ExpandProperty '#text')"
+            $lgpoContent += "`r`n`r`n`r`n; Title: $($lgpoEntries[$i].Title)`r`n; Vuln ID: $($lgpoEntries[$i].GroupId)`r`n; Rule ID: $($lgpoEntries[$i].RuleId)`r`n$($lgpoEntries[$i].Configuration)`r`n$($lgpoEntries[$i].RegistryKey)`r`n$($lgpoEntries[$i].ValueName)`r`n$($lgpoEntries[$i].Action)"
+        }
+    }
+}
+
+if($LGPOPath) {
+    try {
+        Write-Verbose "Writing LGPO content to `"$LGPOPath`"."
+        Write-Output $lgpoContent | Out-File -FilePath $LGPOPath
+    }
+    catch {
+        Write-Error $PSItem
+        return
+    }
+}
+else{
+    $LGPOPath = "$PSScriptRoot\STIG2LGPOFile_$(Get-Date -Format 'yyyy-MM-ddTHH-mm-ss-fff').txt"
+    Write-Verbose "Writing LGPO content to `"$LGPOPath`"."
+    try {
+        Write-Output $lgpoContent | Out-File -FilePath $LGPOPath
+    }
+    catch {
+        Write-Error $PSItem
+        return
+    }
 }
 
 Write-Verbose "Cleaning up."
