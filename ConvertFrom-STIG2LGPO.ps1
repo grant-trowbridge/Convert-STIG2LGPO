@@ -16,15 +16,21 @@ param(
     [string]$LGPOPath
 )
 
-function Get-LGPOFileEntry { # Finish Regex to determine Configuration, Registry Key, Value Name, and Action (type)
+function Get-LGPOFileEntry {
     param (
         [string]$CheckContent,
         [string]$GroupId,
         [string]$RuleId,
-        [String]$Title
+        [String]$Title,
+        [string]$CCI
     )
     $configuration = $null
     
+    if($CheckContnent -match '\s+for\s+standalone\s+or\s+nondomain-joined\s+systems,\s+this\s+is\s+Not\s+Applicable|\s+for\s+standalone\s+systems\s+this\s+is\s+NA|If\s+the\s+system\s+is\s+not\s+a\s+member\s+of\s+a\s+domain,\s+this\s+is\s+NA') {
+        Write-Verbose "Skipping $GroupId domain-joined requirement"
+        return $null
+    }
+
     if($CheckContent -match 'HKLM\\|HKLM|HKEY_LOCAL_MACHINE\\|HKEY_LOCAL_MACHINE') {
         $configuration = 'Computer'
     }
@@ -37,10 +43,13 @@ function Get-LGPOFileEntry { # Finish Regex to determine Configuration, Registry
 
     # Extract registry key
     $registryKey = $null
-    if($CheckContent -match 'HK(?:LM|EY_LOCAL_MACHINE)\\(.+?)(?:\r|\n)|Registry Path:\s*\\(.+?)(?:\r|\n)') { # Separate OR regex statement into more elseif statements for easier access through $Matches!!!
+    if($CheckContent -match 'HK(?:LM|EY_LOCAL_MACHINE)\\(.+?)(?:\r|\n)') {
         $registryKey = $Matches[1].Trim()
     }
-    elseif($CheckContent -match 'HK(?:CU|EY_CURRENT_USER)\\(.+?)(?:\r|\n)|Registry Path:\s*\\(.+?)(?:\r|\n)') {
+    elseif($CheckContent -match 'HK(?:CU|EY_CURRENT_USER)\\(.+?)(?:\r|\n)') {
+        $registryKey = $Matches[1].Trim()
+    }
+    elseif($CheckContent -match 'Registry Path:\s*\\(.+?)(?:\r|\n)') {
         $registryKey = $Matches[1].Trim()
     }
 
@@ -86,13 +95,12 @@ function Get-LGPOFileEntry { # Finish Regex to determine Configuration, Registry
         $value = $Matches[1].Trim()
     }
 
-    if($CheckContent -match 'does not exist|is not configured') {
+    if($CheckContent -notmatch 'does not exist|is not configured') {
         $action = 'DELETE'
     }
-    elseif($type -and $null -ne $data) {
+    elseif($type -and $null -ne $value) {
         $action = "${type}:${value}"
     }
-    
     if (-not ($configuration -and $registryKey -and $valueName)) {
         return $null
     }
@@ -102,6 +110,7 @@ function Get-LGPOFileEntry { # Finish Regex to determine Configuration, Registry
         Title         = $Title
         GroupId       = $GroupId
         RuleId        = $RuleId
+        CCI           = $CCI
         Configuration = $configuration
         RegistryKey   = $registryKey
         ValueName     = $valueName
@@ -157,7 +166,7 @@ $groups = $xmlData.SelectNodes('//xccdf:Group', $nsManager)
 $lgpoEntries = @()
 
 foreach($group in $groups) {
-    if($group.id -eq 'V-253284'){
+    if($group.id -eq 'V-253362'){
         Write-Host "[!] Current VulnID is $($group.id)!" -ForegroundColor Green
     }
 
@@ -165,8 +174,9 @@ foreach($group in $groups) {
     $cGroupId = $group.id
     $cRuleId = $group.Rule.id
     $cRuleTitle = $group.Rule.title
+    $cCCI = ($group.Rule.ident | Where-Object {$PSItem.system -eq 'http://cyber.mil/cci'} | Select-Object -ExpandProperty '#text').Trim()
 
-    $lgpoEntry = Get-LGPOFileEntry -CheckContent $cCheckContent -GroupId $cGroupId -RuleId $cRuleId -Title $cRuleTitle
+    $lgpoEntry = Get-LGPOFileEntry -CheckContent $cCheckContent -GroupId $cGroupId -RuleId $cRuleId -Title $cRuleTitle -CCI $cCCI
 
     if($lgpoEntry) {
         $lgpoEntries += $lgpoEntry
@@ -174,6 +184,7 @@ foreach($group in $groups) {
         Write-Verbose "     Title: $($lgpoEntry.Title)"
         Write-Verbose "     Vuln ID: $($lgpoEntry.GroupId)"
         Write-Verbose "     Rule ID: $($lgpoEntry.RuleId)"
+        Write-Verbose "     CCI: $($lgpoEntry.CCI)"
         Write-Verbose "     Configuration: $($lgpoEntry.Configuration)"
         Write-Verbose "     Registry Key: $($lgpoEntry.RegistryKey)"
         Write-Verbose "     Value Name: $($lgpoEntry.ValueName)"
@@ -185,11 +196,11 @@ $lgpoContent = $null
 if($lgpoEntries) {
     for($i = 0; $i -lt $lgpoEntries.Length; $i++) {
         if($i -gt 0){
-            $lgpoContent += "`r`n`r`n; Title: $($lgpoEntries[$i].Title)`r`n; Vuln ID: $($lgpoEntries[$i].GroupId)`r`n; Rule ID: $($lgpoEntries[$i].RuleId)`r`n$($lgpoEntries[$i].Configuration)`r`n$($lgpoEntries[$i].RegistryKey)`r`n$($lgpoEntries[$i].ValueName)`r`n$($lgpoEntries[$i].Action)"
+            $lgpoContent += "`r`n`r`n; Title: $($lgpoEntries[$i].Title)`r`n; Vuln ID: $($lgpoEntries[$i].GroupId)`r`n; Rule ID: $($lgpoEntries[$i].RuleId)`r`n; CCI: $($lgpoEntries[$i].CCI)`r`n$($lgpoEntries[$i].Configuration)`r`n$($lgpoEntries[$i].RegistryKey)`r`n$($lgpoEntries[$i].ValueName)`r`n$($lgpoEntries[$i].Action)"
         }
         else { # Add Benchmark logic to list STIG title, version & release number at the beginning 
             $lgpoContent = "; $(($benchmark.title).Trim()) Version $(($benchmark.version).Trim()) $($benchmark.{plain-text} | Where-Object {$PSItem.id -eq 'release-info'} | Select-Object -ExpandProperty '#text')"
-            $lgpoContent += "`r`n`r`n`r`n; Title: $($lgpoEntries[$i].Title)`r`n; Vuln ID: $($lgpoEntries[$i].GroupId)`r`n; Rule ID: $($lgpoEntries[$i].RuleId)`r`n$($lgpoEntries[$i].Configuration)`r`n$($lgpoEntries[$i].RegistryKey)`r`n$($lgpoEntries[$i].ValueName)`r`n$($lgpoEntries[$i].Action)"
+            $lgpoContent += "`r`n`r`n`r`n; Title: $($lgpoEntries[$i].Title)`r`n; Vuln ID: $($lgpoEntries[$i].GroupId)`r`n; Rule ID: $($lgpoEntries[$i].RuleId)`r`n; CCI: $($lgpoEntries[$i].CCI)`r`n$($lgpoEntries[$i].Configuration)`r`n$($lgpoEntries[$i].RegistryKey)`r`n$($lgpoEntries[$i].ValueName)`r`n$($lgpoEntries[$i].Action)"
         }
     }
 }
