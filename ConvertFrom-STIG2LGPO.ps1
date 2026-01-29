@@ -26,7 +26,8 @@ function Get-LGPOFileEntry {
     )
     $configuration = $null
     
-    if($CheckContnent -match '\s+for\s+standalone\s+or\s+nondomain-joined\s+systems,\s+this\s+is\s+Not\s+Applicable|\s+for\s+standalone\s+systems\s+this\s+is\s+NA|If\s+the\s+system\s+is\s+not\s+a\s+member\s+of\s+a\s+domain,\s+this\s+is\s+NA') {
+    # Ignore domain-joined system requirements
+    if($CheckContnent -match '\s+for\s+standalone\s+or\s+nondomain-joined\s+systems,\s+this\s+is\s+Not\s+Applicable|\s+for\s+standalone\s+systems\s+this\s+is\s+NA(?:\r+\n+)|If\s+the\s+system\s+is\s+not\s+a\s+member\s+of\s+a\s+domain,\s+this\s+is\s+NA') {
         Write-Verbose "Skipping $GroupId domain-joined requirement"
         return $null
     }
