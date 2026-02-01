@@ -27,9 +27,16 @@ function Get-LGPOFileEntry {
     $configuration = $null
     
     # Ignore domain-joined system requirements
-    if($CheckContnent -match '\s+for\s+standalone\s+or\s+nondomain-joined\s+systems,\s+this\s+is\s+Not\s+Applicable|\s+for\s+standalone\s+systems\s+this\s+is\s+NA(?:\r+\n+)|If\s+the\s+system\s+is\s+not\s+a\s+member\s+of\s+a\s+domain,\s+this\s+is\s+NA') {
-        Write-Verbose "Skipping $GroupId domain-joined requirement"
-        return $null
+    $domainJoinedStrings = @(
+        '\s+for\s+standalone\s+or\s+nondomain-joined\s+systems\s+this\s+is\s+Not\s+Applicable'
+        '\s+for\s+standalone\s+systems\s+this\s+is\s+NA'
+        'If\s+the\s+system\s+is\s+not\s+a\s+member\s+of\s+a\s+domain,\s+this\s+is\s+NA'
+    )
+    foreach($string in $domainJoinedStrings) {
+        if($CheckContent -match $string) {
+            Write-Verbose "Ignoring domain-joined requirement $GroupId"
+            return $null
+        }
     }
 
     if($CheckContent -match 'HKLM\\|HKLM|HKEY_LOCAL_MACHINE\\|HKEY_LOCAL_MACHINE') {
@@ -89,17 +96,29 @@ function Get-LGPOFileEntry {
     elseif($CheckContent -match 'Value:\s*(\d+)' -and $type -eq 'DWORD') { # Decimal value
         $value = $Matches[1]
     }
+    elseif($CheckContent -match 'Value data:\s*(\d+)' -and $type -eq 'DWORD') { # Value data decimal value
+        $value = $Matches[1]
+    }
     elseif($CheckContent -match 'Value:\s*"(.+?)"') { # Quoted string
         $value = $Matches[1]
+    }
+    elseif($CheckContent -match 'Value:\s*(\d+)\s+(?:\(.+?\))' -and $type -eq 'SZ') { # Unquoted decimal string w/ amplifying info
+        $value = $Matches[1].Trim()
     }
     elseif($CheckContent -match 'Value:\s*(.+?)(?:\r|\n)' -and $type -in @('SZ', 'EXSZ')) { # Unquoted string
         $value = $Matches[1].Trim()
     }
+    elseif($CheckContent -match 'Value:\s*(.+?)(?:\r|\n|$)' -and $type -eq 'MULTISZ') { # Multi-string
+        $value = $Matches[1].Replace(' ','\0')
+    }
 
+    <#
     if($CheckContent -notmatch 'does not exist|is not configured') {
         $action = 'DELETE'
     }
-    elseif($type -and $null -ne $value) {
+    #>
+
+    if($type -and $null -ne $value) {
         $action = "${type}:${value}"
     }
     if (-not ($configuration -and $registryKey -and $valueName)) {
@@ -167,7 +186,7 @@ $groups = $xmlData.SelectNodes('//xccdf:Group', $nsManager)
 $lgpoEntries = @()
 
 foreach($group in $groups) {
-    if($group.id -eq 'V-253362'){
+    if($group.id -eq 'V-253447'){
         Write-Host "[!] Current VulnID is $($group.id)!" -ForegroundColor Green
     }
 
@@ -181,7 +200,7 @@ foreach($group in $groups) {
 
     if($lgpoEntry) {
         $lgpoEntries += $lgpoEntry
-        Write-Verbose "Located LGPO entry:"
+        Write-Verbose "Located LGPO entry"
         Write-Verbose "     Title: $($lgpoEntry.Title)"
         Write-Verbose "     Vuln ID: $($lgpoEntry.GroupId)"
         Write-Verbose "     Rule ID: $($lgpoEntry.RuleId)"
