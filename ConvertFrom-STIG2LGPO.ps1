@@ -87,7 +87,17 @@ function Get-LGPOFileEntry {
     }
 
     # Extract registry value
-    if($CheckContent -match 'Value:\s*0x([0-9a-fA-F]+)\s*\((\d+)\)') { # For decimal value
+    if($GroupId -eq 'V-253445') {
+        if ($CheckContent -match '(?s)Value:\s*(.+)') {
+            $value = $Matches[1].Replace("`n`n", "\n")
+        }
+    }
+    elseif($GroupId -eq 'V-253446') {
+        if($CheckContent -match '(?s)Value:\s*See message title above.+?"(US.+?Statement)"') {
+            $value = $Matches[1].Trim()
+        }
+    }
+    elseif($CheckContent -match 'Value:\s*0x([0-9a-fA-F]+)\s*\((\d+)\)') { # For decimal value
         $value = $Matches[2]
     }
     elseif($CheckContent -match 'Value:\s*0x([0-9a-fA-F]+)') { # Hex only
@@ -186,7 +196,7 @@ $groups = $xmlData.SelectNodes('//xccdf:Group', $nsManager)
 $lgpoEntries = @()
 
 foreach($group in $groups) {
-    if($group.id -eq 'V-253447'){
+    if($group.id -eq 'V-235720'){
         Write-Host "[!] Current VulnID is $($group.id)!" -ForegroundColor Green
     }
 
@@ -225,25 +235,27 @@ if($lgpoEntries) {
     }
 }
 
-if($LGPOPath) {
-    try {
+if($null -ne $lgpoContent) {
+    if($LGPOPath) {
+        try {
+            Write-Verbose "Writing LGPO content to `"$LGPOPath`"."
+            Write-Output $lgpoContent | Out-File -FilePath $LGPOPath
+        }
+        catch {
+            Write-Error $PSItem
+            return
+        }
+    }
+    else{
+        $LGPOPath = "$PSScriptRoot\STIG2LGPOFile_$(Get-Date -Format 'yyyy-MM-ddTHH-mm-ss-fff').txt"
         Write-Verbose "Writing LGPO content to `"$LGPOPath`"."
-        Write-Output $lgpoContent | Out-File -FilePath $LGPOPath
-    }
-    catch {
-        Write-Error $PSItem
-        return
-    }
-}
-else{
-    $LGPOPath = "$PSScriptRoot\STIG2LGPOFile_$(Get-Date -Format 'yyyy-MM-ddTHH-mm-ss-fff').txt"
-    Write-Verbose "Writing LGPO content to `"$LGPOPath`"."
-    try {
-        Write-Output $lgpoContent | Out-File -FilePath $LGPOPath
-    }
-    catch {
-        Write-Error $PSItem
-        return
+        try {
+            Write-Output $lgpoContent | Out-File -FilePath $LGPOPath
+        }
+        catch {
+            Write-Error $PSItem
+            return
+        }
     }
 }
 

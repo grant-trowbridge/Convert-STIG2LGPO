@@ -9,7 +9,7 @@ Convert-STIG2LGPO is a PowerShell script that converts DoD STIG Baselines into L
 
 - `V-253369`: Capture multiple Registry values in one CheckContent string.
 - `V-253395`: Capture multiple Registry values in one CheckContent string.
-- `V-253445`
-- `V-253446`
-- `V-253447`: Add domain-joined text pattern to domainJoinedStrings.
-- `V-253448`: Add domain-joined text pattern to domainJoinedStrings.
+
+## Microsoft Edge V2R4 STIG
+
+- Add regex to capture different Registry hive syntax
