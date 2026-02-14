@@ -18,11 +18,12 @@ param(
 
 function Get-LGPOFileEntry {
     param (
+        [string]$Benchmark,
+        [string]$CCI,
         [string]$CheckContent,
         [string]$GroupId,
         [string]$RuleId,
-        [String]$Title,
-        [string]$CCI
+        [String]$Title
     )
     $configuration = $null
     
@@ -69,13 +70,16 @@ function Get-LGPOFileEntry {
     elseif($CheckContent -match '(?:Registry )?Value:\s*(.+?)(?:\r|\n).*?Type:') {
         $valueName = $Matches[1].Trim()
     }
+    elseif($CheckContent -match '(?s)If the value for "(.+?)"') { # Microsoft Edge STIG pattern
+        $valueName = $Matches[1].Trim()
+    }
 
     $action = $null
     $type = $null
     $value = $null
 
     # Extract registry value type
-    if($CheckContent -match 'Type:\s*(REG_\w+)') {
+    if($CheckContent -match 'Type:\s*(REG_\w+)' -or ($Benchmark -match 'Microsoft Edge' -and $CheckContent -match 'is\s*not\s*set\s*to\s*"(REG_\w+)')) {
         $type = switch($Matches[1]) {
             'REG_DWORD'     { 'DWORD' }
             'REG_SZ'        { 'SZ' }
@@ -89,7 +93,7 @@ function Get-LGPOFileEntry {
     # Extract registry value
     if($GroupId -eq 'V-253445') {
         if ($CheckContent -match '(?s)Value:\s*(.+)') {
-            $value = $Matches[1].Replace("`n`n", "\n")
+            $value = $Matches[1].Replace("`n`n", "\r\n")
         }
     }
     elseif($GroupId -eq 'V-253446') {
@@ -109,6 +113,9 @@ function Get-LGPOFileEntry {
     elseif($CheckContent -match 'Value data:\s*(\d+)' -and $type -eq 'DWORD') { # Value data decimal value
         $value = $Matches[1]
     }
+    elseif($CheckContent -match '"REG_\w+\s*=\s*(\d+)"' -and $type -eq 'DWORD') { # Microsoft Edge STIG Pattern
+        $value = $Matches[1]
+    }
     elseif($CheckContent -match 'Value:\s*"(.+?)"') { # Quoted string
         $value = $Matches[1]
     }
@@ -121,12 +128,6 @@ function Get-LGPOFileEntry {
     elseif($CheckContent -match 'Value:\s*(.+?)(?:\r|\n|$)' -and $type -eq 'MULTISZ') { # Multi-string
         $value = $Matches[1].Replace(' ','\0')
     }
-
-    <#
-    if($CheckContent -notmatch 'does not exist|is not configured') {
-        $action = 'DELETE'
-    }
-    #>
 
     if($type -and $null -ne $value) {
         $action = "${type}:${value}"
@@ -206,7 +207,7 @@ foreach($group in $groups) {
     $cRuleTitle = $group.Rule.title
     $cCCI = ($group.Rule.ident | Where-Object {$PSItem.system -eq 'http://cyber.mil/cci'} | Select-Object -ExpandProperty '#text').Trim()
 
-    $lgpoEntry = Get-LGPOFileEntry -CheckContent $cCheckContent -GroupId $cGroupId -RuleId $cRuleId -Title $cRuleTitle -CCI $cCCI
+    $lgpoEntry = Get-LGPOFileEntry -Benchmark $($benchmark.title).Trim() -CheckContent $cCheckContent -GroupId $cGroupId -RuleId $cRuleId -Title $cRuleTitle -CCI $cCCI
 
     if($lgpoEntry) {
         $lgpoEntries += $lgpoEntry
@@ -214,7 +215,7 @@ foreach($group in $groups) {
         Write-Verbose "     Title: $($lgpoEntry.Title)"
         Write-Verbose "     Vuln ID: $($lgpoEntry.GroupId)"
         Write-Verbose "     Rule ID: $($lgpoEntry.RuleId)"
-        Write-Verbose "     CCI: $($lgpoEntry.CCI)"
+        Write-Verbose "     CCI ID: $($lgpoEntry.CCI)"
         Write-Verbose "     Configuration: $($lgpoEntry.Configuration)"
         Write-Verbose "     Registry Key: $($lgpoEntry.RegistryKey)"
         Write-Verbose "     Value Name: $($lgpoEntry.ValueName)"
@@ -226,11 +227,11 @@ $lgpoContent = $null
 if($lgpoEntries) {
     for($i = 0; $i -lt $lgpoEntries.Length; $i++) {
         if($i -gt 0){
-            $lgpoContent += "`r`n`r`n; Title: $($lgpoEntries[$i].Title)`r`n; Vuln ID: $($lgpoEntries[$i].GroupId)`r`n; Rule ID: $($lgpoEntries[$i].RuleId)`r`n; CCI: $($lgpoEntries[$i].CCI)`r`n$($lgpoEntries[$i].Configuration)`r`n$($lgpoEntries[$i].RegistryKey)`r`n$($lgpoEntries[$i].ValueName)`r`n$($lgpoEntries[$i].Action)"
+            $lgpoContent += "`r`n`r`n; Title: $($lgpoEntries[$i].Title)`r`n; Vuln ID: $($lgpoEntries[$i].GroupId)`r`n; Rule ID: $($lgpoEntries[$i].RuleId)`r`n; CCI ID: $($lgpoEntries[$i].CCI)`r`n$($lgpoEntries[$i].Configuration)`r`n$($lgpoEntries[$i].RegistryKey)`r`n$($lgpoEntries[$i].ValueName)`r`n$($lgpoEntries[$i].Action)"
         }
         else { # Add Benchmark logic to list STIG title, version & release number at the beginning 
             $lgpoContent = "; $(($benchmark.title).Trim()) Version $(($benchmark.version).Trim()) $($benchmark.{plain-text} | Where-Object {$PSItem.id -eq 'release-info'} | Select-Object -ExpandProperty '#text')"
-            $lgpoContent += "`r`n`r`n`r`n; Title: $($lgpoEntries[$i].Title)`r`n; Vuln ID: $($lgpoEntries[$i].GroupId)`r`n; Rule ID: $($lgpoEntries[$i].RuleId)`r`n; CCI: $($lgpoEntries[$i].CCI)`r`n$($lgpoEntries[$i].Configuration)`r`n$($lgpoEntries[$i].RegistryKey)`r`n$($lgpoEntries[$i].ValueName)`r`n$($lgpoEntries[$i].Action)"
+            $lgpoContent += "`r`n`r`n`r`n; Title: $($lgpoEntries[$i].Title)`r`n; Vuln ID: $($lgpoEntries[$i].GroupId)`r`n; Rule ID: $($lgpoEntries[$i].RuleId)`r`n; CCI ID: $($lgpoEntries[$i].CCI)`r`n$($lgpoEntries[$i].Configuration)`r`n$($lgpoEntries[$i].RegistryKey)`r`n$($lgpoEntries[$i].ValueName)`r`n$($lgpoEntries[$i].Action)"
         }
     }
 }
