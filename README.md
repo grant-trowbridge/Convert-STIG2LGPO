@@ -12,4 +12,4 @@ Convert-STIG2LGPO is a PowerShell script that converts DoD STIG Baselines into L
 
 ## Microsoft Edge V2R4 STIG
 
-- Add regex to capture different Registry hive syntax
+- `V-260467`: Create regex pattern to exclude non-standard double quote characters.

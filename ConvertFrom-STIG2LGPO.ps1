@@ -32,6 +32,7 @@ function Get-LGPOFileEntry {
         '\s+for\s+standalone\s+or\s+nondomain-joined\s+systems\s+this\s+is\s+Not\s+Applicable'
         '\s+for\s+standalone\s+systems\s+this\s+is\s+NA'
         'If\s+the\s+system\s+is\s+not\s+a\s+member\s+of\s+a\s+domain,\s+this\s+is\s+NA'
+        'If\s*this\s*machine\s*is\s*on\s*SIPRNet,\s*this\s*is\s*Not\s*Applicable.|If\s*this\s*machine\s*is\s*on\s*SIPRNet,\s*this\s*is\s*Not\s*Applicable.'
     )
     foreach($string in $domainJoinedStrings) {
         if($CheckContent -match $string) {
@@ -70,7 +71,16 @@ function Get-LGPOFileEntry {
     elseif($CheckContent -match '(?:Registry )?Value:\s*(.+?)(?:\r|\n).*?Type:') {
         $valueName = $Matches[1].Trim()
     }
-    elseif($CheckContent -match '(?s)If the value for "(.+?)"') { # Microsoft Edge STIG pattern
+    elseif($CheckContent -match '(?s)If\s*the\s*value\s*for\s*"(.+?)"') { # Microsoft Edge STIG quoted pattern
+        $valueName = $Matches[1].Trim()
+    }
+    elseif($CheckContent -match '(?s)If\s*the\s*value\s*for\s*“(.+?)”\s') { # Microsoft Edge STIG non-standard quoted pattern
+        $valueName = $Matches[1].Trim()
+    }
+    elseif($CheckContent -match '(?s)If\s*the\s*Reg_\w+\s*value\s*for\s*"(.+?)"\s*') { # Microsoft Edge quoted pattern w/ Registry value type
+        $valueName = $Matches[1].Trim()
+    }
+    elseif($CheckContent -match '(?s)If\s*the\s*value\s*for\s*(.+?)\s') { # Microsoft Edge STIG unquoted pattern
         $valueName = $Matches[1].Trim()
     }
 
@@ -79,7 +89,7 @@ function Get-LGPOFileEntry {
     $value = $null
 
     # Extract registry value type
-    if($CheckContent -match 'Type:\s*(REG_\w+)' -or ($Benchmark -match 'Microsoft Edge' -and $CheckContent -match 'is\s*not\s*set\s*to\s*"(REG_\w+)')) {
+    if($CheckContent -match 'Type:\s*(REG_\w+)' -or ($Benchmark -match 'Microsoft Edge' -and ($CheckContent -match 'is\s*not\s*set\s*to\s*"(REG_\w+)' -or $CheckContent -match 'If\s*the\s*(REG_\w+)\s*'))) {
         $type = switch($Matches[1]) {
             'REG_DWORD'     { 'DWORD' }
             'REG_SZ'        { 'SZ' }
@@ -91,12 +101,12 @@ function Get-LGPOFileEntry {
     }
 
     # Extract registry value
-    if($GroupId -eq 'V-253445') {
+    if($registryKey -eq 'SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\' -and $valueName -eq 'LegalNoticeText') { # Windows specific banner text pattern
         if ($CheckContent -match '(?s)Value:\s*(.+)') {
             $value = $Matches[1].Replace("`n`n", "\r\n")
         }
     }
-    elseif($GroupId -eq 'V-253446') {
+    elseif($registryKey -eq 'SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\' -and $valueName -eq 'LegalNoticeCaption') { # Windows specific banner caption pattern
         if($CheckContent -match '(?s)Value:\s*See message title above.+?"(US.+?Statement)"') {
             $value = $Matches[1].Trim()
         }
@@ -113,13 +123,19 @@ function Get-LGPOFileEntry {
     elseif($CheckContent -match 'Value data:\s*(\d+)' -and $type -eq 'DWORD') { # Value data decimal value
         $value = $Matches[1]
     }
-    elseif($CheckContent -match '"REG_\w+\s*=\s*(\d+)"' -and $type -eq 'DWORD') { # Microsoft Edge STIG Pattern
+    elseif($CheckContent -match '"REG_\w+\s*=\s*(\d+)"' -and $type -eq 'DWORD') { # Microsoft Edge STIG decimal
         $value = $Matches[1]
     }
     elseif($CheckContent -match 'Value:\s*"(.+?)"') { # Quoted string
         $value = $Matches[1]
     }
     elseif($CheckContent -match 'Value:\s*(\d+)\s+(?:\(.+?\))' -and $type -eq 'SZ') { # Unquoted decimal string w/ amplifying info
+        $value = $Matches[1].Trim()
+    }
+    elseif($CheckContent -match '"REG_\w+\s*=\s*(.+?)"' -and $type -eq 'SZ') { # Microsoft Edge STIG string
+        $value = $Matches[1].Trim()
+    }
+    elseif($CheckContent -match 'Example:\s*(.+?)(?:\r|\n)' -and $type -eq 'SZ' -and $valueName -eq 'ProxySettings' -and $Benchmark -like 'Microsoft Edge*') {
         $value = $Matches[1].Trim()
     }
     elseif($CheckContent -match 'Value:\s*(.+?)(?:\r|\n)' -and $type -in @('SZ', 'EXSZ')) { # Unquoted string
@@ -197,7 +213,7 @@ $groups = $xmlData.SelectNodes('//xccdf:Group', $nsManager)
 $lgpoEntries = @()
 
 foreach($group in $groups) {
-    if($group.id -eq 'V-235720'){
+    if($group.id -eq 'V-235719'){
         Write-Host "[!] Current VulnID is $($group.id)!" -ForegroundColor Green
     }
 
