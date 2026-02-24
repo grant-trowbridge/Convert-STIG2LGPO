@@ -65,6 +65,8 @@ function Get-LGPOFileEntry {
 
     # Extract value name
     $valueName = $null
+    $valueName2 = $null
+
     if($CheckContent -match 'Value Name:\s*(.+?)(?:\r|\n)') {
         $valueName = $Matches[1].Trim()
     }
@@ -85,8 +87,11 @@ function Get-LGPOFileEntry {
     }
 
     $action = $null
+    $action2 = $null
     $type = $null
+    $type2 = $null
     $value = $null
+    $value2 = $null
 
     # Extract registry value type
     if($CheckContent -match 'Type:\s*(REG_\w+)' -or ($Benchmark -match 'Microsoft Edge' -and ($CheckContent -match 'is\s*not\s*set\s*to\s*"(REG_\w+)' -or $CheckContent -match 'If\s*the\s*(REG_\w+)\s*'))) {
@@ -111,6 +116,15 @@ function Get-LGPOFileEntry {
             $value = $Matches[1].Trim()
         }
     }
+    <#
+    elseif($registryKey -eq 'SOFTWARE\Policies\Microsoft\Windows\DeviceGuard' -and $valueName -eq 'EnableVirtualizationBasedSecurity' -and $type -eq 'DWORD' -and $Benchmark -like 'Microsoft Windows 11*') { # Windows specific virtualization-based security pattern
+        if($multiValues = [regex]::Matches($CheckContent, '(?s)Value:\s*(\d+)\s*')) {
+            for($i = 0; $i -lt $multiValues.Length; $i++){
+
+            }
+        }
+    }
+    #>
     elseif($CheckContent -match 'Value:\s*0x([0-9a-fA-F]+)\s*\((\d+)\)') { # For decimal value
         $value = $Matches[2]
     }
@@ -213,7 +227,7 @@ $groups = $xmlData.SelectNodes('//xccdf:Group', $nsManager)
 $lgpoEntries = @()
 
 foreach($group in $groups) {
-    if($group.id -eq 'V-235719'){
+    if($group.id -eq 'V-253369'){
         Write-Host "[!] Current VulnID is $($group.id)!" -ForegroundColor Green
     }
 
