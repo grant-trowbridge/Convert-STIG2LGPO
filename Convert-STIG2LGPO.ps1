@@ -67,7 +67,21 @@ function Get-LGPOFileEntry {
     $valueName = $null
     $valueName2 = $null
 
-    if($CheckContent -match 'Value Name:\s*(.+?)(?:\r|\n)') {
+    if($registryKey -eq 'SOFTWARE\Policies\Microsoft\Windows\DeviceGuard' -and $type -eq 'DWORD' -and $Benchmark -like 'Microsoft Windows 11*') { # Windows specific virtualization-based security pattern
+        if($multiMatch = [regex]::Matches($CheckContent, 'Value Name:\s*(.+?)(?:\r|\n)')) {
+            if($multiMatch.Count -gt 1) {
+                for($i = 0; $i -lt $multiMatch.Count; $i++) {
+                    if($i -eq 0) {
+                        $valueName = $multiMatch[$i].Groups[1].Value.Trim()
+                    }
+                    elseif($i -eq 1) {
+                        $valueName2 = $multiMatch[$i].Groups[1].Value.Trim()
+                    }
+                }
+            }
+        }
+    }
+    elseif($CheckContent -match 'Value Name:\s*(.+?)(?:\r|\n)') {
         $valueName = $Matches[1].Trim()
     }
     elseif($CheckContent -match '(?:Registry )?Value:\s*(.+?)(?:\r|\n).*?Type:') {
@@ -116,15 +130,20 @@ function Get-LGPOFileEntry {
             $value = $Matches[1].Trim()
         }
     }
-    <#
-    elseif($registryKey -eq 'SOFTWARE\Policies\Microsoft\Windows\DeviceGuard' -and $valueName -eq 'EnableVirtualizationBasedSecurity' -and $type -eq 'DWORD' -and $Benchmark -like 'Microsoft Windows 11*') { # Windows specific virtualization-based security pattern
-        if($multiValues = [regex]::Matches($CheckContent, '(?s)Value:\s*(\d+)\s*')) {
-            for($i = 0; $i -lt $multiValues.Length; $i++){
-
+    elseif($registryKey -eq 'SOFTWARE\Policies\Microsoft\Windows\DeviceGuard' -and $type -eq 'DWORD' -and $Benchmark -like 'Microsoft Windows 11*') { # Windows specific virtualization-based security pattern
+        if($multiMatch = [regex]::Matches($CheckContent, '(?s)Value:\s*(\d+)\s*')) {
+            if($multiMatch.Count -gt 1){
+                for($i = 0; $i -lt $multiMatch.Count; $i++){
+                    if($i -eq 0){
+                        $value = $multiMatch[$i].Groups[1].Value
+                    }
+                    elseif($i -eq 1){
+                        $value2 = $multiMatch[$i].Groups[1].Value
+                    }
+                }
             }
         }
     }
-    #>
     elseif($CheckContent -match 'Value:\s*0x([0-9a-fA-F]+)\s*\((\d+)\)') { # For decimal value
         $value = $Matches[2]
     }
@@ -159,7 +178,7 @@ function Get-LGPOFileEntry {
         $value = $Matches[1].Replace(' ','\0')
     }
 
-    if($type -and $null -ne $value) {
+    if($type -and $null -ne $value) { # ADD LOGIC FOR 2ND ACTION
         $action = "${type}:${value}"
     }
     if (-not ($configuration -and $registryKey -and $valueName)) {
