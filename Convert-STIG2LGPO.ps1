@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param(
+param (
     [Parameter(
         Mandatory=$true,
         Position=0,
@@ -25,7 +25,6 @@ function Get-LGPOFileEntry {
         [string]$RuleId,
         [String]$Title
     )
-    $configuration = $null
     
     # Ignore domain-joined system requirements
     $domainJoinedStrings = @(
@@ -41,6 +40,11 @@ function Get-LGPOFileEntry {
         }
     }
 
+    # Extract configuration
+
+    $configuration = $null
+    $configuration2 = $null
+
     if($CheckContent -match 'HKLM\\|HKLM|HKEY_LOCAL_MACHINE\\|HKEY_LOCAL_MACHINE') {
         $configuration = 'Computer'
     }
@@ -53,6 +57,8 @@ function Get-LGPOFileEntry {
 
     # Extract registry key
     $registryKey = $null
+    $registryKey2 = $null
+
     if($CheckContent -match 'HK(?:LM|EY_LOCAL_MACHINE)\\(.+?)(?:\r|\n)') {
         $registryKey = $Matches[1].Trim()
     }
@@ -121,7 +127,7 @@ function Get-LGPOFileEntry {
 
     # Extract registry value
     if($registryKey -eq 'SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\' -and $valueName -eq 'LegalNoticeText') { # Windows specific banner text pattern
-        if ($CheckContent -match '(?s)Value:\s*(.+)') {
+        if($CheckContent -match '(?s)Value:\s*(.+)') {
             $value = $Matches[1].Replace("`n`n", "\r\n")
         }
     }
@@ -132,12 +138,12 @@ function Get-LGPOFileEntry {
     }
     elseif($registryKey -eq 'SOFTWARE\Policies\Microsoft\Windows\DeviceGuard' -and $type -eq 'DWORD' -and $Benchmark -like 'Microsoft Windows 11*') { # Windows specific virtualization-based security pattern
         if($multiMatch = [regex]::Matches($CheckContent, '(?s)Value:\s*(\d+)\s*')) {
-            if($multiMatch.Count -gt 1){
-                for($i = 0; $i -lt $multiMatch.Count; $i++){
-                    if($i -eq 0){
+            if($multiMatch.Count -gt 1) {
+                for($i = 0; $i -lt $multiMatch.Count; $i++) {
+                    if($i -eq 0) {
                         $value = $multiMatch[$i].Groups[1].Value
                     }
-                    elseif($i -eq 1){
+                    elseif($i -eq 1) {
                         $value2 = $multiMatch[$i].Groups[1].Value
                     }
                 }
