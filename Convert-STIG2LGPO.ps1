@@ -73,7 +73,7 @@ function Get-LGPOFileEntry {
     $valueName = $null
     $valueName2 = $null
 
-    if($registryKey -eq 'SOFTWARE\Policies\Microsoft\Windows\DeviceGuard' -and $type -eq 'DWORD' -and $Benchmark -like 'Microsoft Windows 11*') { # Windows specific virtualization-based security pattern
+    if($registryKey -eq 'SOFTWARE\Policies\Microsoft\Windows\DeviceGuard' -and $Benchmark -like 'Microsoft Windows 11*') { # Windows specific virtualization-based security pattern
         if($multiMatch = [regex]::Matches($CheckContent, 'Value Name:\s*(.+?)(?:\r|\n)')) {
             if($multiMatch.Count -gt 1) {
                 for($i = 0; $i -lt $multiMatch.Count; $i++) {
@@ -114,7 +114,21 @@ function Get-LGPOFileEntry {
     $value2 = $null
 
     # Extract registry value type
-    if($CheckContent -match 'Type:\s*(REG_\w+)' -or ($Benchmark -match 'Microsoft Edge' -and ($CheckContent -match 'is\s*not\s*set\s*to\s*"(REG_\w+)' -or $CheckContent -match 'If\s*the\s*(REG_\w+)\s*'))) {
+    if($registryKey -eq 'SOFTWARE\Policies\Microsoft\Windows\DeviceGuard' -and $type -eq 'DWORD' -and $Benchmark -like 'Microsoft Windows 11*') {
+        if($multiMatch = [regex]::Matches($CheckContent, 'Type:\s*(REG_\w+)')) {
+            if($multiMatch.Count -gt 1) {
+                for($i = 0; $i -lt $multiMatch.Count; $i++) {
+                    if($i -eq 0) {
+                        $type = $multiMatch[$i].Groups[1].Value
+                    }
+                    elseif($i -eq 1) {
+                        $type2 = $multiMatch[$i].Groups[1].Value
+                    }
+                }
+            }
+        }
+    }
+    elseif($CheckContent -match 'Type:\s*(REG_\w+)' -or ($Benchmark -match 'Microsoft Edge' -and ($CheckContent -match 'is\s*not\s*set\s*to\s*"(REG_\w+)' -or $CheckContent -match 'If\s*the\s*(REG_\w+)\s*'))) {
         $type = switch($Matches[1]) {
             'REG_DWORD'     { 'DWORD' }
             'REG_SZ'        { 'SZ' }

@@ -8,6 +8,10 @@ Convert-STIG2LGPO is a PowerShell script that automates the tedious process of c
 
 - Rewrite DELETE/DELETEALLVALUES action logic.
 
+## Adobe Reader DC Continuous Track
+
+- Add regex to handle specific formatting based on benchmark value
+
 ## Windows 11 V2R6 STIG
 
 - `V-253369`: Capture multiple Registry values in one CheckContent string.
