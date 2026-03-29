@@ -16,6 +16,90 @@ param (
     [string]$LGPOPath
 )
 
+function Get-MultipleRegistryNames {
+    param (
+        [string]$Content
+    )
+    $name = $null
+    $name2 = $null
+
+    if($multiMatch = [regex]::Matches($Content, 'Value Name:\s*(.+?)(?:\r|\n)')) {
+        if($multiMatch.Count -gt 1) {
+            for($i = 0; $i -lt $multiMatch.Count; $i++) {
+                if($i -eq 0) {
+                    $name = $multiMatch[$i].Groups[1].Value.Trim()
+                }
+                elseif($i -eq 1) {
+                    $name2 = $multiMatch[$i].Groups[1].Value.Trim()
+                }
+            }
+            return [PSCustomObject]@{
+                RegName  = $name
+                RegName2 = $name2
+            }
+        }
+        else {
+            return $null
+        }
+    }
+}
+
+function Get-MultipleRegistryTypes {
+    param (
+        [string]$Content
+    )
+    $type = $null
+    $type2 = $null
+
+    if($multiMatch = [regex]::Matches($Content, 'Type:\s*(REG_\w+)')) {
+        if($multiMatch.Count -gt 1) {
+            for($i = 0; $i -lt $multiMatch.Count; $i++) {
+                if($i -eq 0) {
+                    $type = $multiMatch[$i].Groups[1].Value
+                }
+                elseif($i -eq 1) {
+                    $type2 = $multiMatch[$i].Groups[1].Value
+                }
+            }
+            return [PSCustomObject]@{
+                TypeName  = $type
+                TypeName2 = $type2
+            }
+        }
+        else {
+            return $null
+        }
+    }
+}
+
+function Get-MultipleRegistryValues {
+    param (
+        [string]$Content
+    )
+    $value = $null
+    $value2 = $null
+
+    if($multiMatch = [regex]::Matches($Content, 'Type:\s*(REG_\w+)')) {
+        if($multiMatch.Count -gt 1) {
+            for($i = 0; $i -lt $multiMatch.Count; $i++) {
+                if($i -eq 0) {
+                    $value = $multiMatch[$i].Groups[1].Value
+                }
+                elseif($i -eq 1) {
+                    $value2 = $multiMatch[$i].Groups[1].Value
+                }
+            }
+            return [PSCustomObject]@{
+                ValueName  = $value
+                ValueName2 = $value2
+            }
+        }
+        else {
+            return $null
+        }
+    }
+}
+
 function Get-LGPOFileEntry {
     param (
         [string]$Benchmark,
@@ -74,17 +158,10 @@ function Get-LGPOFileEntry {
     $valueName2 = $null
 
     if($registryKey -eq 'SOFTWARE\Policies\Microsoft\Windows\DeviceGuard' -and $Benchmark -like 'Microsoft Windows 11*') { # Windows specific virtualization-based security pattern
-        if($multiMatch = [regex]::Matches($CheckContent, 'Value Name:\s*(.+?)(?:\r|\n)')) {
-            if($multiMatch.Count -gt 1) {
-                for($i = 0; $i -lt $multiMatch.Count; $i++) {
-                    if($i -eq 0) {
-                        $valueName = $multiMatch[$i].Groups[1].Value.Trim()
-                    }
-                    elseif($i -eq 1) {
-                        $valueName2 = $multiMatch[$i].Groups[1].Value.Trim()
-                    }
-                }
-            }
+        $nameValues = Get-MultipleRegistryNames -Content $CheckContent
+        if($nameValues -ne $null) {
+            $valueName = $nameValues.RegName
+            $valueName2 = $nameValues.RegName2
         }
     }
     elseif($CheckContent -match 'Value Name:\s*(.+?)(?:\r|\n)') {
@@ -114,18 +191,11 @@ function Get-LGPOFileEntry {
     $value2 = $null
 
     # Extract registry value type
-    if($registryKey -eq 'SOFTWARE\Policies\Microsoft\Windows\DeviceGuard' -and $type -eq 'DWORD' -and $Benchmark -like 'Microsoft Windows 11*') {
-        if($multiMatch = [regex]::Matches($CheckContent, 'Type:\s*(REG_\w+)')) {
-            if($multiMatch.Count -gt 1) {
-                for($i = 0; $i -lt $multiMatch.Count; $i++) {
-                    if($i -eq 0) {
-                        $type = $multiMatch[$i].Groups[1].Value
-                    }
-                    elseif($i -eq 1) {
-                        $type2 = $multiMatch[$i].Groups[1].Value
-                    }
-                }
-            }
+    if($registryKey -eq 'SOFTWARE\Policies\Microsoft\Windows\DeviceGuard' -and $Benchmark -like 'Microsoft Windows 11*') {
+        $typeNames = Get-MultipleRegistryTypes -Content $CheckContent
+        if($typeNames -ne $null) {
+            $type = $typeNames.TypeName
+            $type2 = $typeNames.TypeName2
         }
     }
     elseif($CheckContent -match 'Type:\s*(REG_\w+)' -or ($Benchmark -match 'Microsoft Edge' -and ($CheckContent -match 'is\s*not\s*set\s*to\s*"(REG_\w+)' -or $CheckContent -match 'If\s*the\s*(REG_\w+)\s*'))) {
@@ -140,7 +210,9 @@ function Get-LGPOFileEntry {
     }
 
     # Extract registry value
-    if($registryKey -eq 'SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\' -and $valueName -eq 'LegalNoticeText') { # Windows specific banner text pattern
+    if($registryKey -eq 'SOFTWARE\Policies\Microsoft\Windows\DeviceGuard' -and $Benchmark -like 'Microsoft Windows 11*') {
+    }
+    elseif($registryKey -eq 'SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\' -and $valueName -eq 'LegalNoticeText') { # Windows specific banner text pattern
         if($CheckContent -match '(?s)Value:\s*(.+)') {
             $value = $Matches[1].Replace("`n`n", "\r\n")
         }
