@@ -55,10 +55,24 @@ function Get-MultipleRegistryTypes {
         if($multiMatch.Count -gt 1) {
             for($i = 0; $i -lt $multiMatch.Count; $i++) {
                 if($i -eq 0) {
-                    $type = $multiMatch[$i].Groups[1].Value
+                    $type = switch($multiMatch[$i].Groups[1].Value) {
+                        'REG_DWORD'     { 'DWORD' }
+                        'REG_SZ'        { 'SZ' }
+                        'REG_MULTI_SZ'  { 'MULTISZ' }
+                        'REG_EXPAND_SZ' { 'EXSZ' }
+                        'REG_BINARY'    { 'BINARY' }
+                        default         { $Matches[1] }
+                    }
                 }
                 elseif($i -eq 1) {
-                    $type2 = $multiMatch[$i].Groups[1].Value
+                    $type2 = switch($multiMatch[$i].Groups[1].Value) {
+                        'REG_DWORD'     { 'DWORD' }
+                        'REG_SZ'        { 'SZ' }
+                        'REG_MULTI_SZ'  { 'MULTISZ' }
+                        'REG_EXPAND_SZ' { 'EXSZ' }
+                        'REG_BINARY'    { 'BINARY' }
+                        default         { $Matches[1] }
+                    }
                 }
             }
             return [PSCustomObject]@{
@@ -79,7 +93,7 @@ function Get-MultipleRegistryValues {
     $value = $null
     $value2 = $null
 
-    if($multiMatch = [regex]::Matches($Content, 'Type:\s*(REG_\w+)')) {
+    if($multiMatch = [regex]::Matches($Content, 'Value:\s*(\d+)')) {
         if($multiMatch.Count -gt 1) {
             for($i = 0; $i -lt $multiMatch.Count; $i++) {
                 if($i -eq 0) {
@@ -90,8 +104,8 @@ function Get-MultipleRegistryValues {
                 }
             }
             return [PSCustomObject]@{
-                ValueName  = $value
-                ValueName2 = $value2
+                RegistryValue  = $value
+                RegistryValue2 = $value2
             }
         }
         else {
@@ -211,6 +225,11 @@ function Get-LGPOFileEntry {
 
     # Extract registry value
     if($registryKey -eq 'SOFTWARE\Policies\Microsoft\Windows\DeviceGuard' -and $Benchmark -like 'Microsoft Windows 11*') {
+        $regValues = Get-MultipleRegistryValues -Content $CheckContent
+        if($regValues -ne $null) {
+            $value = $regValues.RegistryValue
+            $value2 = $regValues.RegistryValue2
+        }
     }
     elseif($registryKey -eq 'SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\' -and $valueName -eq 'LegalNoticeText') { # Windows specific banner text pattern
         if($CheckContent -match '(?s)Value:\s*(.+)') {
