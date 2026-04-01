@@ -43,7 +43,6 @@ function Get-LGPOFileEntry {
     # Extract configuration
 
     $configuration = $null
-    $configuration2 = $null
 
     if($CheckContent -match 'HKLM\\|HKLM|HKEY_LOCAL_MACHINE\\|HKEY_LOCAL_MACHINE') {
         $configuration = 'Computer'
@@ -52,12 +51,12 @@ function Get-LGPOFileEntry {
         $configuration = 'User'
     }
     else {
+        Write-Verbose "Ignoring VulnID: $GroupID"
         return $null
     }
 
     # Extract registry key
     $registryKey = $null
-    $registryKey2 = $null
 
     if($CheckContent -match 'HK(?:LM|EY_LOCAL_MACHINE)\\(.+?)(?:\r|\n)') {
         $registryKey = $Matches[1].Trim()
@@ -71,23 +70,8 @@ function Get-LGPOFileEntry {
 
     # Extract value name
     $valueName = $null
-    $valueName2 = $null
 
-    if($registryKey -eq 'SOFTWARE\Policies\Microsoft\Windows\DeviceGuard' -and $Benchmark -like 'Microsoft Windows 11*') { # Windows specific virtualization-based security pattern
-        if($multiMatch = [regex]::Matches($CheckContent, 'Value Name:\s*(.+?)(?:\r|\n)')) {
-            if($multiMatch.Count -gt 1) {
-                for($i = 0; $i -lt $multiMatch.Count; $i++) {
-                    if($i -eq 0) {
-                        $valueName = $multiMatch[$i].Groups[1].Value.Trim()
-                    }
-                    elseif($i -eq 1) {
-                        $valueName2 = $multiMatch[$i].Groups[1].Value.Trim()
-                    }
-                }
-            }
-        }
-    }
-    elseif($CheckContent -match 'Value Name:\s*(.+?)(?:\r|\n)') {
+    if($CheckContent -match 'Value Name:\s*(.+?)(?:\r|\n)') {
         $valueName = $Matches[1].Trim()
     }
     elseif($CheckContent -match '(?:Registry )?Value:\s*(.+?)(?:\r|\n).*?Type:') {
@@ -107,28 +91,11 @@ function Get-LGPOFileEntry {
     }
 
     $action = $null
-    $action2 = $null
     $type = $null
-    $type2 = $null
     $value = $null
-    $value2 = $null
 
     # Extract registry value type
-    if($registryKey -eq 'SOFTWARE\Policies\Microsoft\Windows\DeviceGuard' -and $type -eq 'DWORD' -and $Benchmark -like 'Microsoft Windows 11*') {
-        if($multiMatch = [regex]::Matches($CheckContent, 'Type:\s*(REG_\w+)')) {
-            if($multiMatch.Count -gt 1) {
-                for($i = 0; $i -lt $multiMatch.Count; $i++) {
-                    if($i -eq 0) {
-                        $type = $multiMatch[$i].Groups[1].Value
-                    }
-                    elseif($i -eq 1) {
-                        $type2 = $multiMatch[$i].Groups[1].Value
-                    }
-                }
-            }
-        }
-    }
-    elseif($CheckContent -match 'Type:\s*(REG_\w+)' -or ($Benchmark -match 'Microsoft Edge' -and ($CheckContent -match 'is\s*not\s*set\s*to\s*"(REG_\w+)' -or $CheckContent -match 'If\s*the\s*(REG_\w+)\s*'))) {
+    if($CheckContent -match 'Type:\s*(REG_\w+)' -or ($Benchmark -match 'Microsoft Edge' -and ($CheckContent -match 'is\s*not\s*set\s*to\s*"(REG_\w+)' -or $CheckContent -match 'If\s*the\s*(REG_\w+)\s*'))) {
         $type = switch($Matches[1]) {
             'REG_DWORD'     { 'DWORD' }
             'REG_SZ'        { 'SZ' }
@@ -148,20 +115,6 @@ function Get-LGPOFileEntry {
     elseif($registryKey -eq 'SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\' -and $valueName -eq 'LegalNoticeCaption') { # Windows specific banner caption pattern
         if($CheckContent -match '(?s)Value:\s*See message title above.+?"(US.+?Statement)"') {
             $value = $Matches[1].Trim()
-        }
-    }
-    elseif($registryKey -eq 'SOFTWARE\Policies\Microsoft\Windows\DeviceGuard' -and $type -eq 'DWORD' -and $Benchmark -like 'Microsoft Windows 11*') { # Windows specific virtualization-based security pattern
-        if($multiMatch = [regex]::Matches($CheckContent, '(?s)Value:\s*(\d+)\s*')) {
-            if($multiMatch.Count -gt 1) {
-                for($i = 0; $i -lt $multiMatch.Count; $i++) {
-                    if($i -eq 0) {
-                        $value = $multiMatch[$i].Groups[1].Value
-                    }
-                    elseif($i -eq 1) {
-                        $value2 = $multiMatch[$i].Groups[1].Value
-                    }
-                }
-            }
         }
     }
     elseif($CheckContent -match 'Value:\s*0x([0-9a-fA-F]+)\s*\((\d+)\)') { # For decimal value
@@ -202,6 +155,7 @@ function Get-LGPOFileEntry {
         $action = "${type}:${value}"
     }
     if (-not ($configuration -and $registryKey -and $valueName)) {
+        Write-Verbose "Ignoring VulnID: $GroupID"
         return $null
     }
     
