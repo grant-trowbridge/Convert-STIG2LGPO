@@ -31,7 +31,6 @@ function Get-LGPOFileEntry {
         '\s+for\s+standalone\s+or\s+nondomain-joined\s+systems\s+this\s+is\s+Not\s+Applicable'
         '\s+for\s+standalone\s+systems\s+this\s+is\s+NA'
         'If\s+the\s+system\s+is\s+not\s+a\s+member\s+of\s+a\s+domain,\s+this\s+is\s+NA'
-        'If\s*this\s*machine\s*is\s*on\s*SIPRNet,\s*this\s*is\s*Not\s*Applicable.|If\s*this\s*machine\s*is\s*on\s*SIPRNet,\s*this\s*is\s*Not\s*Applicable.'
     )
     foreach($string in $domainJoinedStrings) {
         if($CheckContent -match $string) {
@@ -40,8 +39,14 @@ function Get-LGPOFileEntry {
         }
     }
 
-    # Extract configuration
+    # Ignore optional requirements
+    $optionalStrings = 'is\s+not\s+required;\s+this\s+is\s+optional.'
+    if($CheckContent -match $optionalStrings) {
+        Write-Verbose "Ignoring optional requirement $GroupId"
+        return $null
+    }
 
+    # Extract configuration
     $configuration = $null
 
     if($CheckContent -match 'HKLM\\|HKLM|HKEY_LOCAL_MACHINE\\|HKEY_LOCAL_MACHINE') {
@@ -51,7 +56,7 @@ function Get-LGPOFileEntry {
         $configuration = 'User'
     }
     else {
-        Write-Verbose "Ignoring VulnID: $GroupID"
+        Write-Verbose "Ignoring VulnID $GroupID"
         return $null
     }
 
@@ -155,7 +160,7 @@ function Get-LGPOFileEntry {
         $action = "${type}:${value}"
     }
     if (-not ($configuration -and $registryKey -and $valueName)) {
-        Write-Verbose "Ignoring VulnID: $GroupID"
+        Write-Verbose "Ignoring VulnID $GroupID"
         return $null
     }
     

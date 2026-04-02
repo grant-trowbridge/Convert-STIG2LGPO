@@ -22,9 +22,4 @@ Convert-STIG2LGPO is a PowerShell script that automates the tedious process of c
 
 ## Microsoft Edge V2R4 STIG
 
-- `V-235720`: Incorrectly identified as a domain-joined requirement. Create strict regex to ensure SIPR NAs are still captured.
-- `V-235721`: Incorrectly identified as a domain-joined requirement. Create strict regex to ensure SIPR NAs are still captured.
-- `V-235722`: Incorrectly identified as a domain-joined requirement. Create strict regex to ensure SIPR NAs are still captured.
-- `V-235753`: Create regex pattern to exclude optional Registry settings.
-- `V-235755`: Create regex pattern to exclude optional Registry settings.
 - `V-260467`: Create regex pattern to exclude non-standard double quote characters.
