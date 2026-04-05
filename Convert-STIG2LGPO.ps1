@@ -16,6 +16,17 @@ param (
     [string]$LGPOPath
 )
 
+function Get-MultiValueRegistryEntries {
+    param (
+        [string]$CheckContent,
+        [string]$GroupId
+    )
+
+    $names = [regex]::Matches($CheckContent, 'Value Name:\s*(.+?)(?:\r|\n)')
+    $types = [regex]::Matches($CheckContent,)
+    $values = [regex]::Matches($CheckContent,)
+}
+
 function Get-LGPOFileEntry {
     param (
         [string]$Benchmark,
