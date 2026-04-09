@@ -22,9 +22,10 @@ function Get-MultiValueRegistryEntries {
         [string]$GroupId
     )
 
+    $configurations = [regex]::Matches($CheckContent, 'HKLM\\|HKLM|HKEY_LOCAL_MACHINE\\|HKEY_LOCAL_MACHINE')
     $names = [regex]::Matches($CheckContent, 'Value Name:\s*(.+?)(?:\r|\n)')
-    $types = [regex]::Matches($CheckContent,)
-    $values = [regex]::Matches($CheckContent,)
+    $types = [regex]::Matches($CheckContent, 'Type:\s*(REG_\w+)')
+    $values = [regex]::Matches($CheckContent, 'Value:\s*(\d+)')
 }
 
 function Get-LGPOFileEntry {
