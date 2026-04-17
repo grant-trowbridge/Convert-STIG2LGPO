@@ -11,6 +11,8 @@ Convert-STIG2LGPO is a PowerShell script that automates the tedious process of c
 
 - Rewrite DELETE/DELETEALLVALUES action logic.
 
+- Create if statements to efficiently utilize appropriate regex patterns based on benchmark value
+
 ## Adobe Reader DC Continuous Track V2R1
 
 - Add regex to handle specific formatting based on benchmark value

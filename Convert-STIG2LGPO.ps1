@@ -26,6 +26,10 @@ function Get-MultiValueRegistryEntries {
     $names = [regex]::Matches($CheckContent, 'Value Name:\s*(.+?)(?:\r|\n)')
     $types = [regex]::Matches($CheckContent, 'Type:\s*(REG_\w+)')
     $values = [regex]::Matches($CheckContent, 'Value:\s*(\d+)')
+
+    if($configurations.Count -le 1 -or $names.Count -le 1) {
+
+    }
 }
 
 function Get-LGPOFileEntry {
