@@ -17,7 +17,14 @@ Convert-STIG2LGPO is a PowerShell script that automates the tedious process of c
 
 - Add regex to handle specific formatting based on benchmark value
 
-## Windows 11 V2R7 STIG
+## Microsoft DotNet Framework 4.0 V2R8
+
+- `V-225223`: Create regex pattern to recognize DELETEALLVALUES requirement.
+- `V-225224`: Create regex pattern to exclude `[UNIQUE USER SID VALUE]` from captured Registry path.
+- `V-225231`: Capture multiple Registry values in one CheckContent string (with unique Registry paths too).
+- `V-225238`: Capture multiple Registry values in one CheckContent string (with unique Registry paths too).
+
+## Microsoft Windows 11 V2R7 STIG
 
 - `V-253369`: Capture multiple Registry values in one CheckContent string.
 - `V-253395`: Capture multiple Registry values in one CheckContent string.

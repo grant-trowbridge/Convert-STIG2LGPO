@@ -28,7 +28,14 @@ function Get-MultiValueRegistryEntries {
     $values = [regex]::Matches($CheckContent, 'Value:\s*(\d+)')
 
     if($configurations.Count -le 1 -or $names.Count -le 1) {
+        return $null
+    }
 
+    $entries = @()
+    $maxCount = [Math]::Min($configurations.Count, [Math]::Min($names.Count, $values.Count))
+
+    for($i = 0; $i -lt $maxCount; $i++) {
+        
     }
 }
 
@@ -92,6 +99,11 @@ function Get-LGPOFileEntry {
     # Extract value name
     $valueName = $null
 
+    if($Benchmark -like 'Microsoft DoNet Framework 4.0*'){
+        if($CheckContent -match 'HK(?:U|EY_LOCAL_MACHINE)\\()') {
+            
+        }
+    }
     if($CheckContent -match 'Value Name:\s*(.+?)(?:\r|\n)') {
         $valueName = $Matches[1].Trim()
     }
