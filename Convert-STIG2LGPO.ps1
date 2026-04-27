@@ -18,8 +18,12 @@ param (
 
 function Get-MultiValueRegistryEntries {
     param (
+        [string]$Benchmark,
+        [string]$CCI,
         [string]$CheckContent,
-        [string]$GroupId
+        [string]$GroupId,
+        [string]$RuleId,
+        [String]$Title
     )
 
     $configurations = [regex]::Matches($CheckContent, 'HKLM\\|HKLM|HKEY_LOCAL_MACHINE\\|HKEY_LOCAL_MACHINE')
@@ -32,7 +36,7 @@ function Get-MultiValueRegistryEntries {
     }
 
     $entries = @()
-    $maxCount = [Math]::Min($configurations.Count, [Math]::Min($names.Count, $values.Count))
+    $maxCount = [Math]::Min([Math]::Min($names.Count, $values.Count))
 
     for($i = 0; $i -lt $maxCount; $i++) {
         

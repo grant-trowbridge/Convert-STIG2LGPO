@@ -7,7 +7,7 @@
 	xmlns:xhtml="http://www.w3.org/1999/xhtml"
 	xmlns:dsig="http://www.w3.org/2000/09/xmldsig#" xsi:schemaLocation="http://checklists.nist.gov/xccdf/1.1 http://nvd.nist.gov/schema/xccdf-1.1.4.xsd http://cpe.mitre.org/dictionary/2.0 http://cpe.mitre.org/files/cpe-dictionary_2.1.xsd" id="Microsoft_Windows_11_STIG" xml:lang="en"
 	xmlns="http://checklists.nist.gov/xccdf/1.1">
-	<status date="2025-11-24">accepted</status>
+	<status date="2026-02-12">accepted</status>
 	<title>Microsoft Windows 11 Security Technical Implementation Guide</title>
 	<description>This Security Technical Implementation Guide is published as a tool to improve the security of Department of Defense (DOD) information systems. The requirements are derived from the National Institute of Standards and Technology (NIST) 800-53 and related documents. Comments or proposed revisions to this document should be sent via email to the following address: disa.stig_spt@mail.mil.</description>
 	<notice id="terms-of-use" xml:lang="en"></notice>
@@ -17,7 +17,7 @@
 		<dc:publisher>DISA</dc:publisher>
 		<dc:source>STIG.DOD.MIL</dc:source>
 	</reference>
-	<plain-text id="release-info">Release: 6 Benchmark Date: 05 Jan 2026</plain-text>
+	<plain-text id="release-info">Release: 7 Benchmark Date: 01 Apr 2026</plain-text>
 	<plain-text id="generator">3.5.2</plain-text>
 	<plain-text id="conventionsVersion">1.10.0</plain-text>
 	<version>2</version>
@@ -28,7 +28,6 @@
 		<select idref="V-253255" selected="true" />
 		<select idref="V-253256" selected="true" />
 		<select idref="V-253257" selected="true" />
-		<select idref="V-253258" selected="true" />
 		<select idref="V-253259" selected="true" />
 		<select idref="V-253260" selected="true" />
 		<select idref="V-253261" selected="true" />
@@ -295,7 +294,6 @@
 		<select idref="V-253255" selected="true" />
 		<select idref="V-253256" selected="true" />
 		<select idref="V-253257" selected="true" />
-		<select idref="V-253258" selected="true" />
 		<select idref="V-253259" selected="true" />
 		<select idref="V-253260" selected="true" />
 		<select idref="V-253261" selected="true" />
@@ -562,7 +560,6 @@
 		<select idref="V-253255" selected="true" />
 		<select idref="V-253256" selected="true" />
 		<select idref="V-253257" selected="true" />
-		<select idref="V-253258" selected="true" />
 		<select idref="V-253259" selected="true" />
 		<select idref="V-253260" selected="true" />
 		<select idref="V-253261" selected="true" />
@@ -829,7 +826,6 @@
 		<select idref="V-253255" selected="true" />
 		<select idref="V-253256" selected="true" />
 		<select idref="V-253257" selected="true" />
-		<select idref="V-253258" selected="true" />
 		<select idref="V-253259" selected="true" />
 		<select idref="V-253260" selected="true" />
 		<select idref="V-253261" selected="true" />
@@ -1096,7 +1092,6 @@
 		<select idref="V-253255" selected="true" />
 		<select idref="V-253256" selected="true" />
 		<select idref="V-253257" selected="true" />
-		<select idref="V-253258" selected="true" />
 		<select idref="V-253259" selected="true" />
 		<select idref="V-253260" selected="true" />
 		<select idref="V-253261" selected="true" />
@@ -1363,7 +1358,6 @@
 		<select idref="V-253255" selected="true" />
 		<select idref="V-253256" selected="true" />
 		<select idref="V-253257" selected="true" />
-		<select idref="V-253258" selected="true" />
 		<select idref="V-253259" selected="true" />
 		<select idref="V-253260" selected="true" />
 		<select idref="V-253261" selected="true" />
@@ -1630,7 +1624,6 @@
 		<select idref="V-253255" selected="true" />
 		<select idref="V-253256" selected="true" />
 		<select idref="V-253257" selected="true" />
-		<select idref="V-253258" selected="true" />
 		<select idref="V-253259" selected="true" />
 		<select idref="V-253260" selected="true" />
 		<select idref="V-253261" selected="true" />
@@ -1897,7 +1890,6 @@
 		<select idref="V-253255" selected="true" />
 		<select idref="V-253256" selected="true" />
 		<select idref="V-253257" selected="true" />
-		<select idref="V-253258" selected="true" />
 		<select idref="V-253259" selected="true" />
 		<select idref="V-253260" selected="true" />
 		<select idref="V-253261" selected="true" />
@@ -2164,7 +2156,6 @@
 		<select idref="V-253255" selected="true" />
 		<select idref="V-253256" selected="true" />
 		<select idref="V-253257" selected="true" />
-		<select idref="V-253258" selected="true" />
 		<select idref="V-253259" selected="true" />
 		<select idref="V-253260" selected="true" />
 		<select idref="V-253261" selected="true" />
@@ -2561,37 +2552,6 @@ Under "System Summary", if "Secure Boot State" does not display "On", this is a 
 			</check>
 		</Rule>
 	</Group>
-	<Group id="V-253258">
-		<title>SRG-OS-000191-GPOS-00080</title>
-		<description>&lt;GroupDescription&gt;&lt;/GroupDescription&gt;</description>
-		<Rule id="SV-253258r1000099_rule" weight="10.0" severity="medium">
-			<version>WN11-00-000025</version>
-			<title>Windows 11 must employ automated mechanisms to determine the state of system components with regard to flaw remediation using the following frequency: Continuously, where ESS is used; 30 days, for any additional internal network scans not covered by ESS; and annually, for external scans by Computer Network Defense Service Provider (CNDSP).</title>
-			<description>&lt;VulnDiscussion&gt;An approved tool for continuous network scanning must be installed and configured to run.
-
-Without the use of automated mechanisms to scan for security flaws on a continuous and/or periodic basis, the operating system or other system components may remain vulnerable to the exploits presented by undetected software flaws.
-
-To support this requirement, the operating system may have an integrated solution incorporating continuous scanning using ESS and periodic scanning using other tools, as specified in the requirement.&lt;/VulnDiscussion&gt;&lt;FalsePositives&gt;&lt;/FalsePositives&gt;&lt;FalseNegatives&gt;&lt;/FalseNegatives&gt;&lt;Documentable&gt;false&lt;/Documentable&gt;&lt;Mitigations&gt;&lt;/Mitigations&gt;&lt;SeverityOverrideGuidance&gt;&lt;/SeverityOverrideGuidance&gt;&lt;PotentialImpacts&gt;&lt;/PotentialImpacts&gt;&lt;ThirdPartyTools&gt;&lt;/ThirdPartyTools&gt;&lt;MitigationControl&gt;&lt;/MitigationControl&gt;&lt;Responsibility&gt;&lt;/Responsibility&gt;&lt;IAControls&gt;&lt;/IAControls&gt;</description>
-			<reference>
-				<dc:title>DPMS Target Microsoft Windows 11 </dc:title>
-				<dc:publisher>DISA</dc:publisher>
-				<dc:type>DPMS Target</dc:type>
-				<dc:subject>Microsoft Windows 11 </dc:subject>
-				<dc:identifier>5471</dc:identifier>
-			</reference>
-			<ident system="http://cyber.mil/cci">CCI-000366</ident>
-			<fixtext fixref="F-56661r997865_fix">Install DOD-approved ESS software and ensure it is operating continuously.</fixtext>
-			<fix id="F-56661r997865_fix" />
-			<check system="C-56711r997864_chk">
-				<check-content-ref href="Microsoft_Windows_11__STIG.xml" name="M" />
-				<check-content>Verify DOD-approved ESS software is installed and properly operating. Ask the site information system security manager (ISSM) for documentation of the ESS software installation and configuration.
-
-If the ISSM is not able to provide a documented configuration for an installed ESS or if the ESS software is not properly maintained or used, this is a finding.
-
-Note: Example of documentation can be a copy of the site's CCB approved Software Baseline with version of software noted or a memo from the ISSM stating current ESS software and version.</check-content>
-			</check>
-		</Rule>
-	</Group>
 	<Group id="V-253259">
 		<title>SRG-OS-000404-GPOS-00183</title>
 		<description>&lt;GroupDescription&gt;&lt;/GroupDescription&gt;</description>
@@ -2635,7 +2595,7 @@ Note: An alternate encryption application may be used in lieu of BitLocker provi
 	<Group id="V-253260">
 		<title>SRG-OS-000405-GPOS-00184</title>
 		<description>&lt;GroupDescription&gt;&lt;/GroupDescription&gt;</description>
-		<Rule id="SV-253260r958872_rule" weight="10.0" severity="high">
+		<Rule id="SV-253260r1186370_rule" weight="10.0" severity="high">
 			<version>WN11-00-000031</version>
 			<title>Windows 11 systems must use a BitLocker PIN for pre-boot authentication.</title>
 			<description>&lt;VulnDiscussion&gt;If data at rest is unencrypted, it is vulnerable to disclosure. Even if the operating system enforces permissions on data access, an adversary can remove non-volatile memory and read it directly, thereby circumventing operating system controls. Encrypting the data ensures that confidentiality is protected even when the operating system is not running. Pre-boot authentication prevents unauthorized users from accessing encrypted drives.&lt;/VulnDiscussion&gt;&lt;FalsePositives&gt;&lt;/FalsePositives&gt;&lt;FalseNegatives&gt;&lt;/FalseNegatives&gt;&lt;Documentable&gt;false&lt;/Documentable&gt;&lt;Mitigations&gt;&lt;/Mitigations&gt;&lt;SeverityOverrideGuidance&gt;&lt;/SeverityOverrideGuidance&gt;&lt;PotentialImpacts&gt;&lt;/PotentialImpacts&gt;&lt;ThirdPartyTools&gt;&lt;/ThirdPartyTools&gt;&lt;MitigationControl&gt;&lt;/MitigationControl&gt;&lt;Responsibility&gt;&lt;/Responsibility&gt;&lt;IAControls&gt;&lt;/IAControls&gt;</description>
@@ -2647,8 +2607,12 @@ Note: An alternate encryption application may be used in lieu of BitLocker provi
 				<dc:identifier>5471</dc:identifier>
 			</reference>
 			<ident system="http://cyber.mil/cci">CCI-002476</ident>
-			<fixtext fixref="F-56663r828863_fix">Configure the policy value for Computer Configuration &gt;&gt; Administrative Templates &gt;&gt; Windows Components &gt;&gt; BitLocker Drive Encryption &gt;&gt; Operating System Drives "Require additional authentication at startup" to "Enabled" with "Configure TPM Startup PIN:" set to "Require startup PIN with TPM" or with "Configure TPM startup key and PIN:" set to "Require startup key and PIN with TPM".</fixtext>
-			<fix id="F-56663r828863_fix" />
+			<fixtext fixref="F-56663r1186369_fix">Configure the policy value for Computer Configuration &gt;&gt; Administrative Templates &gt;&gt; Windows Components &gt;&gt; BitLocker Drive Encryption &gt;&gt; Operating System Drives "Require additional authentication at startup" to "Enabled" with "Configure TPM Startup PIN:" set to "Require startup PIN with TPM" or with "Configure TPM startup key and PIN:" set to "Require startup key and PIN with TPM".
+
+If Network Unlock is active, select "Configure TPM startup PIN:" and set to "Require startup PIN with TPM".
+
+ If Network Unlock is not active, select "Configure TPM startup key and PIN:" and set to "Require startup key and PIN with TPM".</fixtext>
+			<fix id="F-56663r1186369_fix" />
 			<check system="C-56713r828862_chk">
 				<check-content-ref href="Microsoft_Windows_11__STIG.xml" name="M" />
 				<check-content>If the following registry value does not exist or is not configured as specified, this is a finding:
@@ -2810,7 +2774,7 @@ If the "About Windows" dialog box does not display "Microsoft Windows 11 Version
 	<Group id="V-253264">
 		<title>SRG-OS-000480-GPOS-00227</title>
 		<description>&lt;GroupDescription&gt;&lt;/GroupDescription&gt;</description>
-		<Rule id="SV-253264r991589_rule" weight="10.0" severity="high">
+		<Rule id="SV-253264r1186372_rule" weight="10.0" severity="high">
 			<version>WN11-00-000045</version>
 			<title>The Windows 11 system must use an antivirus program.</title>
 			<description>&lt;VulnDiscussion&gt;Malicious software can establish a base on individual desktops and servers. Employing an automated mechanism to detect this type of software will aid in elimination of the software from the operating system.&lt;/VulnDiscussion&gt;&lt;FalsePositives&gt;&lt;/FalsePositives&gt;&lt;FalseNegatives&gt;&lt;/FalseNegatives&gt;&lt;Documentable&gt;false&lt;/Documentable&gt;&lt;Mitigations&gt;&lt;/Mitigations&gt;&lt;SeverityOverrideGuidance&gt;&lt;/SeverityOverrideGuidance&gt;&lt;PotentialImpacts&gt;&lt;/PotentialImpacts&gt;&lt;ThirdPartyTools&gt;&lt;/ThirdPartyTools&gt;&lt;MitigationControl&gt;&lt;/MitigationControl&gt;&lt;Responsibility&gt;&lt;/Responsibility&gt;&lt;IAControls&gt;&lt;/IAControls&gt;</description>
@@ -2824,19 +2788,19 @@ If the "About Windows" dialog box does not display "Microsoft Windows 11 Version
 			<ident system="http://cyber.mil/cci">CCI-000366</ident>
 			<fixtext fixref="F-56667r828875_fix">Install Microsoft Defender Antivirus or a third-party antivirus solution.</fixtext>
 			<fix id="F-56667r828875_fix" />
-			<check system="C-56717r828874_chk">
+			<check system="C-56717r1186371_chk">
 				<check-content-ref href="Microsoft_Windows_11__STIG.xml" name="M" />
-				<check-content>Verify an antivirus solution is installed on the system and in use. The antivirus solution may be bundled with an approved Endpoint Security Solution.
+				<check-content>Verify an organizationally approved antivirus solution (Microsoft Defender Antivirus, for example) is installed on the system and in use. 
 
 Verify if Microsoft Defender Antivirus is in use or enabled:
 
-Open "PowerShell".
+Open PowerShell.
 
 Enter "get-service | where {$_.DisplayName -Like "*Defender*"} | Select Status,DisplayName"
 
 Verify third-party antivirus is in use or enabled:
 
-Open "PowerShell".
+Open PowerShell.
 
 Enter "get-service | where {$_.DisplayName -Like "*mcafee*"} | Select Status,DisplayName"
 
@@ -5343,10 +5307,10 @@ Value: 0x00008000 (32768) (or greater)</check-content>
 	<Group id="V-253338">
 		<title>SRG-OS-000341-GPOS-00132</title>
 		<description>&lt;GroupDescription&gt;&lt;/GroupDescription&gt;</description>
-		<Rule id="SV-253338r958752_rule" weight="10.0" severity="medium">
+		<Rule id="SV-253338r1186375_rule" weight="10.0" severity="medium">
 			<version>WN11-AU-000505</version>
-			<title>The Security event log size must be configured to 1024000 KB or greater.</title>
-			<description>&lt;VulnDiscussion&gt;Inadequate log size will cause the log to fill up quickly. This may prevent audit events from being recorded properly and require frequent attention by administrative personnel.&lt;/VulnDiscussion&gt;&lt;FalsePositives&gt;&lt;/FalsePositives&gt;&lt;FalseNegatives&gt;&lt;/FalseNegatives&gt;&lt;Documentable&gt;false&lt;/Documentable&gt;&lt;Mitigations&gt;&lt;/Mitigations&gt;&lt;SeverityOverrideGuidance&gt;&lt;/SeverityOverrideGuidance&gt;&lt;PotentialImpacts&gt;&lt;/PotentialImpacts&gt;&lt;ThirdPartyTools&gt;&lt;/ThirdPartyTools&gt;&lt;MitigationControl&gt;&lt;/MitigationControl&gt;&lt;Responsibility&gt;&lt;/Responsibility&gt;&lt;IAControls&gt;&lt;/IAControls&gt;</description>
+			<title>The security event log size must be configured to a value that holds at least one week's worth of audit records.</title>
+			<description>&lt;VulnDiscussion&gt;Inadequate log size will cause the log to fill up quickly. This may prevent audit events from being recorded properly and require frequent attention by administrative personnel. System administrators (SAs) must monitor the volume of security event audit records and increase the registry value for the log size as needed.&lt;/VulnDiscussion&gt;&lt;FalsePositives&gt;&lt;/FalsePositives&gt;&lt;FalseNegatives&gt;&lt;/FalseNegatives&gt;&lt;Documentable&gt;false&lt;/Documentable&gt;&lt;Mitigations&gt;&lt;/Mitigations&gt;&lt;SeverityOverrideGuidance&gt;&lt;/SeverityOverrideGuidance&gt;&lt;PotentialImpacts&gt;&lt;/PotentialImpacts&gt;&lt;ThirdPartyTools&gt;&lt;/ThirdPartyTools&gt;&lt;MitigationControl&gt;&lt;/MitigationControl&gt;&lt;Responsibility&gt;&lt;/Responsibility&gt;&lt;IAControls&gt;&lt;/IAControls&gt;</description>
 			<reference>
 				<dc:title>DPMS Target Microsoft Windows 11 </dc:title>
 				<dc:publisher>DISA</dc:publisher>
@@ -5355,15 +5319,19 @@ Value: 0x00008000 (32768) (or greater)</check-content>
 				<dc:identifier>5471</dc:identifier>
 			</reference>
 			<ident system="http://cyber.mil/cci">CCI-001849</ident>
-			<fixtext fixref="F-56741r829097_fix">Configure the policy value for Computer Configuration &gt;&gt; Administrative Templates &gt;&gt; Windows Components &gt;&gt; Event Log Service &gt;&gt; Security &gt;&gt; "Specify the maximum log file size (KB)" to "Enabled" with a "Maximum Log Size (KB)" of "1024000" or greater.
+			<fixtext fixref="F-56741r1186374_fix">Configure the policy value for Computer Configuration &gt;&gt; Administrative Templates &gt;&gt; Windows Components &gt;&gt; Event Log Service &gt;&gt; Security &gt;&gt; "Specify the maximum log file size (KB)" to "Enabled" with a "Maximum Log Size (KB)" of a value that will contain one week of audit records or greater.
 
 If the system is configured to send audit records directly to an audit server, this must be documented with the ISSO.</fixtext>
-			<fix id="F-56741r829097_fix" />
-			<check system="C-56791r829096_chk">
+			<fix id="F-56741r1186374_fix" />
+			<check system="C-56791r1186373_chk">
 				<check-content-ref href="Microsoft_Windows_11__STIG.xml" name="M" />
-				<check-content>If the system is configured to send audit records directly to an audit server, this is NA. This must be documented with the ISSO.
+				<check-content>If the system is configured to send audit records directly to an audit server, this requirement is not applicable. This must be documented with the information system security officer (ISSO).
+
+The registry configuration setting below must be set (at least) to a value equal to the size needed to contain one week's worth of audit records in the security event log. The value used below is an example that assumes a typical week’s log size of 5GB.
 
 If the following registry value does not exist or is not configured as specified, this is a finding:
+
+Note: The following registry entry is an example; the value must equal at least one week's worth of records.
 
 Registry Hive: HKEY_LOCAL_MACHINE
 Registry Path: \SOFTWARE\Policies\Microsoft\Windows\EventLog\Security\
@@ -5371,7 +5339,7 @@ Registry Path: \SOFTWARE\Policies\Microsoft\Windows\EventLog\Security\
 Value Name: MaxSize
 
 Value Type: REG_DWORD
-Value: 0x000fa000 (1024000) (or greater)</check-content>
+Value:0x49960800 (5120000) (or greater)</check-content>
 			</check>
 		</Rule>
 	</Group>
