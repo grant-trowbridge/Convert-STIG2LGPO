@@ -289,7 +289,7 @@ if($lgpoEntries) {
         if($i -gt 0){
             $lgpoContent += "`r`n`r`n; Title: $($lgpoEntries[$i].Title)`r`n; Vuln ID: $($lgpoEntries[$i].GroupId)`r`n; Rule ID: $($lgpoEntries[$i].RuleId)`r`n; CCI ID: $($lgpoEntries[$i].CCI)`r`n$($lgpoEntries[$i].Configuration)`r`n$($lgpoEntries[$i].RegistryKey)`r`n$($lgpoEntries[$i].ValueName)`r`n$($lgpoEntries[$i].Action)"
         }
-        else { # Add Benchmark logic to list STIG title, version & release number at the beginning 
+        else {
             $lgpoContent = "; $(($benchmark.title).Trim()) Version $(($benchmark.version).Trim()) $($benchmark.{plain-text} | Where-Object {$PSItem.id -eq 'release-info'} | Select-Object -ExpandProperty '#text')"
             $lgpoContent += "`r`n`r`n`r`n; Title: $($lgpoEntries[$i].Title)`r`n; Vuln ID: $($lgpoEntries[$i].GroupId)`r`n; Rule ID: $($lgpoEntries[$i].RuleId)`r`n; CCI ID: $($lgpoEntries[$i].CCI)`r`n$($lgpoEntries[$i].Configuration)`r`n$($lgpoEntries[$i].RegistryKey)`r`n$($lgpoEntries[$i].ValueName)`r`n$($lgpoEntries[$i].Action)"
         }
