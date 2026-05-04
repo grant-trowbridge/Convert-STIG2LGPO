@@ -16,6 +16,30 @@ param (
     [string]$LGPOPath
 )
 
+function Get-GroupCaptures {
+    param (
+        [Parameter(
+            Mandatory=$true,
+            Position=0
+        )]
+        [System.Object[]]$Groups
+    )
+
+    $captures = @()
+
+    if($null -eq $Groups) {
+        return $null
+    }
+    else {
+        $Groups | ForEach-Object {
+            if($PSItem.Name -ne 0) { # Only write group captures to array
+                $captures += $PSItem.Value
+            }
+        }
+        return $captures
+    }
+}
+
 function Get-MultiValueRegistryEntries {
     param (
         [string]$Benchmark,
@@ -117,9 +141,14 @@ function Get-LGPOFileEntry {
     elseif($CheckContent -match '(?s)If\s*the\s*value\s*for\s*"(.+?)"') { # Microsoft Edge STIG quoted pattern
         $valueName = $Matches[1].Trim()
     }
+    elseif($search = [regex]::Matches($CheckContent, '(?s)If\s*the\s*value\s*for\s*“(.+?)”\s')) {
+        $valueName = $search.Groups
+    }
+    <#
     elseif($CheckContent -match '(?s)If\s*the\s*value\s*for\s*“(.+?)”\s') { # Microsoft Edge STIG non-standard quoted pattern
         $valueName = $Matches[1].Trim()
     }
+    #>
     elseif($CheckContent -match '(?s)If\s*the\s*Reg_\w+\s*value\s*for\s*"(.+?)"\s*') { # Microsoft Edge quoted pattern w/ Registry value type
         $valueName = $Matches[1].Trim()
     }
@@ -257,7 +286,7 @@ $groups = $xmlData.SelectNodes('//xccdf:Group', $nsManager)
 $lgpoEntries = @()
 
 foreach($group in $groups) {
-    if($group.id -eq 'V-253369'){
+    if($group.id -eq 'V-260467'){
         Write-Host "[!] Current VulnID is $($group.id)!" -ForegroundColor Green
     }
 
