@@ -127,11 +127,13 @@ function Get-LGPOFileEntry {
     # Extract value name
     $valueName = $null
 
-    if($Benchmark -like 'Microsoft DoNet Framework 4.0*'){
-        if($CheckContent -match 'HK(?:U|EY_LOCAL_MACHINE)\\()') {
-            
-        }
+    # Instead of long if/elseif statements, place all regex queries into an array and iterate through them to feed each
+    #       one to the regex class Matches method
+    $search = [regex]::Matches($CheckContent, '(?s)If\s*the\s*value\s*for\s*\u201C(.+?)\u201D\s')
+    if($search.Groups) {
+        $valueName = Get-GroupCaptures -Groups $search.Groups
     }
+    <#
     if($CheckContent -match 'Value Name:\s*(.+?)(?:\r|\n)') {
         $valueName = $Matches[1].Trim()
     }
@@ -141,14 +143,9 @@ function Get-LGPOFileEntry {
     elseif($CheckContent -match '(?s)If\s*the\s*value\s*for\s*"(.+?)"') { # Microsoft Edge STIG quoted pattern
         $valueName = $Matches[1].Trim()
     }
-    elseif($search = [regex]::Matches($CheckContent, '(?s)If\s*the\s*value\s*for\s*“(.+?)”\s')) {
-        $valueName = $search.Groups
-    }
-    <#
     elseif($CheckContent -match '(?s)If\s*the\s*value\s*for\s*“(.+?)”\s') { # Microsoft Edge STIG non-standard quoted pattern
         $valueName = $Matches[1].Trim()
     }
-    #>
     elseif($CheckContent -match '(?s)If\s*the\s*Reg_\w+\s*value\s*for\s*"(.+?)"\s*') { # Microsoft Edge quoted pattern w/ Registry value type
         $valueName = $Matches[1].Trim()
     }
@@ -156,6 +153,7 @@ function Get-LGPOFileEntry {
         $valueName = $Matches[1].Trim()
     }
 
+    #>
     $action = $null
     $type = $null
     $value = $null
