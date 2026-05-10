@@ -26,9 +26,7 @@ Convert-STIG2LGPO is a PowerShell script that automates the tedious process of c
 
 ## Microsoft Windows 11 V2R7 STIG
 
+- `V-253260`: Prevent the capture of multiple value names. Only select first `UseTPMPin` value.
 - `V-253369`: Capture multiple Registry values in one CheckContent string.
+- `V-253394`: Prevent the capture of duplicate value names?
 - `V-253395`: Capture multiple Registry values in one CheckContent string.
-
-## Microsoft Edge V2R5 STIG
-
-- `V-260467`: Create regex pattern to exclude non-standard double quote characters.

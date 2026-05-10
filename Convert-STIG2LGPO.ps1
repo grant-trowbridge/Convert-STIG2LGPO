@@ -40,30 +40,35 @@ function Get-GroupCaptures {
     }
 }
 
-function Get-MultiValueRegistryEntries {
+function Get-ValueNames {
     param (
-        [string]$Benchmark,
-        [string]$CCI,
-        [string]$CheckContent,
-        [string]$GroupId,
-        [string]$RuleId,
-        [String]$Title
+        [string]
+        $CheckContent
     )
 
-    $configurations = [regex]::Matches($CheckContent, 'HKLM\\|HKLM|HKEY_LOCAL_MACHINE\\|HKEY_LOCAL_MACHINE')
-    $names = [regex]::Matches($CheckContent, 'Value Name:\s*(.+?)(?:\r|\n)')
-    $types = [regex]::Matches($CheckContent, 'Type:\s*(REG_\w+)')
-    $values = [regex]::Matches($CheckContent, 'Value:\s*(\d+)')
+    $valueNamePatterns = @(
+        'Value Name:\s*(.+?)(?:\r|\n)'
+        '(?:Registry )?Value:\s*(.+?)(?:\r|\n).*?Type:'
+        '(?s)If\s*the\s*value\s*for\s*"(.+?)"' # Microsoft Edge STIG quoted pattern
+        '(?s)If\s*the\s*value\s*for\s*\u201C(.+?)\u201D\s' # Microsoft Edge STIG non-standard quoted pattern
+        '(?s)If\s*the\s*Reg_\w+\s*value\s*for\s*"(.+?)"\s*' # Microsoft Edge quoted pattern w/ Registry value type
+        '(?s)If\s*the\s*value\s*for\s*(.+?)\s' # Microsoft Edge STIG unquoted pattern
+    )
 
-    if($configurations.Count -le 1 -or $names.Count -le 1) {
-        return $null
+    $search = $null
+
+    foreach($pattern in $valueNamePatterns){
+        $search = [regex]::Matches($CheckContent, $pattern)
+        if($search.Count -gt 0) {
+            break
+        }
     }
-
-    $entries = @()
-    $maxCount = [Math]::Min([Math]::Min($names.Count, $values.Count))
-
-    for($i = 0; $i -lt $maxCount; $i++) {
-        
+    
+    if($search.Count -gt 0){
+        return Get-GroupCaptures -Groups $search.Groups
+    }
+    else{
+        return $null
     }
 }
 
@@ -127,33 +132,8 @@ function Get-LGPOFileEntry {
     # Extract value name
     $valueName = $null
 
-    # Instead of long if/elseif statements, place all regex queries into an array and iterate through them to feed each
-    #       one to the regex class Matches method
-    $search = [regex]::Matches($CheckContent, '(?s)If\s*the\s*value\s*for\s*\u201C(.+?)\u201D\s')
-    if($search.Groups) {
-        $valueName = Get-GroupCaptures -Groups $search.Groups
-    }
-    <#
-    if($CheckContent -match 'Value Name:\s*(.+?)(?:\r|\n)') {
-        $valueName = $Matches[1].Trim()
-    }
-    elseif($CheckContent -match '(?:Registry )?Value:\s*(.+?)(?:\r|\n).*?Type:') {
-        $valueName = $Matches[1].Trim()
-    }
-    elseif($CheckContent -match '(?s)If\s*the\s*value\s*for\s*"(.+?)"') { # Microsoft Edge STIG quoted pattern
-        $valueName = $Matches[1].Trim()
-    }
-    elseif($CheckContent -match '(?s)If\s*the\s*value\s*for\s*“(.+?)”\s') { # Microsoft Edge STIG non-standard quoted pattern
-        $valueName = $Matches[1].Trim()
-    }
-    elseif($CheckContent -match '(?s)If\s*the\s*Reg_\w+\s*value\s*for\s*"(.+?)"\s*') { # Microsoft Edge quoted pattern w/ Registry value type
-        $valueName = $Matches[1].Trim()
-    }
-    elseif($CheckContent -match '(?s)If\s*the\s*value\s*for\s*(.+?)\s') { # Microsoft Edge STIG unquoted pattern
-        $valueName = $Matches[1].Trim()
-    }
+    $valueName = Get-ValueNames -CheckContent $CheckContent
 
-    #>
     $action = $null
     $type = $null
     $value = $null
@@ -284,7 +264,7 @@ $groups = $xmlData.SelectNodes('//xccdf:Group', $nsManager)
 $lgpoEntries = @()
 
 foreach($group in $groups) {
-    if($group.id -eq 'V-260467'){
+    if($group.id -eq 'V-235726'){
         Write-Host "[!] Current VulnID is $($group.id)!" -ForegroundColor Green
     }
 
